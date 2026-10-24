@@ -6,7 +6,6 @@ $uploadDir = __DIR__ . "/uploads/instructors/";
 if (!is_dir($uploadDir)) {
     @mkdir($uploadDir, 0777, true);
 }
-
 function saveInstructorPhoto($file,$oldPhoto = '') {
     global $uploadDir;
     if (!isset($file) || $file['error'] === UPLOAD_ERR_NO_FILE) return$oldPhoto;
