@@ -62,7 +62,11 @@ $result = mysqli_query(
 <aside class="sidebar">
 
     <div class="logo">
+<<<<<<< HEAD
         <h2>Course Portal</h2>
+=======
+        <h2>YearLevel Portal</h2>
+>>>>>>> 8d08809d39aea5accd85cd5c496d243ca4fd1eb5
         <p>Enrollment Management System</p>
     </div>
 
