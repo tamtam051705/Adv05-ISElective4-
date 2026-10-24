@@ -2,13 +2,7 @@
 require_once __DIR__ . "/auth.php";
 require_once __DIR__ . "/db_connect.php";
 
-$uploadDir = __DIR__ . "/uploads/instructors/";
-if (!is_dir($uploadDir)) {
-    @mkdir($uploadDir, 0777, true);
-}
-
 function saveInstructorPhoto($file, $oldPhoto = '') {
-    global $uploadDir;
     if (!isset($file) || $file['error'] === UPLOAD_ERR_NO_FILE) return $oldPhoto;
     if ($file['error'] !== UPLOAD_ERR_OK) return $oldPhoto;
 
@@ -17,33 +11,18 @@ function saveInstructorPhoto($file, $oldPhoto = '') {
     if (!in_array($ext, $allowed, true)) return $oldPhoto;
     if ($file['size'] > 5 * 1024 * 1024) return $oldPhoto;
 
-    $filename = uniqid('instructor_', true) . '.' . $ext;
-    if (move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
-        if ($oldPhoto !== '' && is_file($uploadDir . basename($oldPhoto))) {
-            @unlink($uploadDir . basename($oldPhoto));
-        }
-        return $filename;
-    }
-    return $oldPhoto;
+    // Encode image directly into Base64 text to store safely in the database
+    $imageData = file_get_contents($file['tmp_name']);
+    return 'data:image/' . $ext . ';base64,' . base64_encode($imageData);
 }
 
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
-    $stmt = mysqli_prepare($conn, "SELECT PHOTO FROM tbl_instructors WHERE ID=?");
-    mysqli_stmt_bind_param($stmt, "i", $id);
-    mysqli_stmt_execute($stmt);
-    $res = mysqli_stmt_get_result($stmt);
-    $old = mysqli_fetch_assoc($res);
-    mysqli_stmt_close($stmt);
-
     $stmt = mysqli_prepare($conn, "DELETE FROM tbl_instructors WHERE ID=?");
     mysqli_stmt_bind_param($stmt, "i", $id);
     mysqli_stmt_execute($stmt);
     mysqli_stmt_close($stmt);
 
-    if ($old && !empty($old['PHOTO']) && is_file($uploadDir . basename($old['PHOTO']))) {
-        @unlink($uploadDir . basename($old['PHOTO']));
-    }
     header("Location: instructor.php");
     exit();
 }
@@ -93,7 +72,7 @@ $result = mysqli_query($conn, "SELECT * FROM tbl_instructors ORDER BY ID ASC");
 <a href="subjects.php"><i class="fa-solid fa-book"></i> Subjects</a>
 <a href="usertype.php"><i class="fa-solid fa-user-shield"></i> User Type</a>
 <a href="users.php"><i class="fa-solid fa-user"></i> Users</a>
-<a href="instructors.php"><i class="fa-solid fa-chalkboard-teacher"></i> Instructors</a>
+<a href="instructor.php"><i class="fa-solid fa-chalkboard-teacher"></i> Instructors</a>
 </nav>
 <a href="logout.php" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
 </aside>
@@ -119,7 +98,7 @@ $result = mysqli_query($conn, "SELECT * FROM tbl_instructors ORDER BY ID ASC");
 <?php $count=1; while($row=mysqli_fetch_assoc($result)): ?>
 <tr>
 <td><?= $count++; ?></td><td><?= (int)$row['ID']; ?></td>
-<td><?php if(!empty($row['PHOTO'])): ?><img class="photo-thumb" src="uploads/instructors/<?= htmlspecialchars(basename($row['PHOTO'])); ?>" alt="Instructor photo"><?php else: ?><span class="no-photo">No photo</span><?php endif; ?></td>
+<td><?php if(!empty($row['PHOTO'])): ?><img class="photo-thumb" src="<?= $row['PHOTO']; ?>" alt="Instructor photo"><?php else: ?><span class="no-photo">No photo</span><?php endif; ?></td>
 <td><?= htmlspecialchars($row['SALUTATION']); ?></td><td><?= htmlspecialchars($row['FIRSTNAME']); ?></td><td><?= htmlspecialchars($row['MIDDLENAME']); ?></td><td><?= htmlspecialchars($row['LASTNAME']); ?></td>
 <td class="actions"><a href="instructors.php?id=<?= (int)$row['ID']; ?>"><button type="button" class="edit-btn"><i class="fa-solid fa-pen"></i> Edit</button></a><a href="instructor.php?delete=<?= (int)$row['ID']; ?>" onclick="return confirm('Delete this instructor?');"><button type="button" class="delete-btn"><i class="fa-solid fa-trash"></i> Delete</button></a></td>
 </tr>
