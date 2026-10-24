@@ -12,3 +12,7 @@ EXPOSE 80
 
 CMD ["apache2-foreground"]
 
+RUN mkdir -p /var/www/html/images/users \
+    && chown -R www-data:www-data /var/www/html/images \
+    && chmod -R 755 /var/www/html/images
+
