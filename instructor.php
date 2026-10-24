@@ -98,7 +98,16 @@ $result = mysqli_query($conn, "SELECT * FROM tbl_instructors ORDER BY ID ASC");
 <?php $count=1; while($row=mysqli_fetch_assoc($result)): ?>
 <tr>
 <td><?= $count++; ?></td><td><?= (int)$row['ID']; ?></td>
-<td><?php if(!empty($row['PHOTO'])): ?><img class="photo-thumb" src="<?= $row['PHOTO']; ?>" alt="Instructor photo"><?php else: ?><span class="no-photo">No photo</span><?php endif; ?></td>
+<td>
+<?php if(!empty($row['PHOTO'])): 
+    // Check if it's a Base64 string or an old filename
+    $photoSrc = (strpos($row['PHOTO'], 'data:image') === false) ? 'uploads/instructors/' . htmlspecialchars(basename($row['PHOTO'])) : $row['PHOTO'];
+?>
+    <img class="photo-thumb" src="<?= $photoSrc; ?>" alt="Instructor photo">
+<?php else: ?>
+    <span class="no-photo">No photo</span>
+<?php endif; ?>
+</td>
 <td><?= htmlspecialchars($row['SALUTATION']); ?></td><td><?= htmlspecialchars($row['FIRSTNAME']); ?></td><td><?= htmlspecialchars($row['MIDDLENAME']); ?></td><td><?= htmlspecialchars($row['LASTNAME']); ?></td>
 <td class="actions"><a href="instructors.php?id=<?= (int)$row['ID']; ?>"><button type="button" class="edit-btn"><i class="fa-solid fa-pen"></i> Edit</button></a><a href="instructor.php?delete=<?= (int)$row['ID']; ?>" onclick="return confirm('Delete this instructor?');"><button type="button" class="delete-btn"><i class="fa-solid fa-trash"></i> Delete</button></a></td>
 </tr>
